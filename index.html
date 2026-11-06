@@ -1,0 +1,867 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F2F3F1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121615" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="운동">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;-webkit-text-size-adjust:100%}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>30일 운동 루틴</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: a gym logbook. Calendar of 30 day-tiles on top, the selected day's workout card below like a log sheet. */
+:root {
+  --bg: #F2F3F1;
+  --paper: #FFFFFF;
+  --ink: #1C2220;
+  --muted: #5D6763;
+  --line: #D5DAD6;
+  --chip: #E6EAE7;
+  --accent: #E8573A;
+  --accent-soft: #FBE3DB;
+  --jp: #2F7FC1;
+  --ok: #2E8B57;
+  --ok-soft: #DDF0E4;
+  --f-display: 'Black Han Sans', 'IBM Plex Sans KR', 'Apple SD Gothic Neo', sans-serif;
+  --f-body: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --f-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121615; --paper: #1A1F1D; --ink: #E7ECE9; --muted: #9FA9A4; --line: #2E3532; --chip: #232A27;
+  --accent: #FF7A5C; --accent-soft: #3B231C; --jp: #7CC4FF; --ok: #5CC98A; --ok-soft: #1C3326; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #121615; --paper: #1A1F1D; --ink: #E7ECE9; --muted: #9FA9A4; --line: #2E3532; --chip: #232A27;
+  --accent: #FF7A5C; --accent-soft: #3B231C; --jp: #7CC4FF; --ok: #5CC98A; --ok-soft: #1C3326; color-scheme: dark }
+
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.65; }
+.wrap { max-width: 860px; margin: 0 auto; padding-block: 36px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 32px; }
+h1, h2 { font-family: var(--f-display); font-weight: 400; margin: 0; text-wrap: balance; letter-spacing: .01em; }
+h1 { font-size: clamp(2rem, 7vw, 2.9rem); line-height: 1.15; }
+h2 { font-size: 1.4rem; line-height: 1.3; }
+h3 { margin: 0; font-size: 1rem; }
+p { margin: 0; }
+.eyebrow { font-family: var(--f-mono); font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.lede { color: var(--muted); max-width: 64ch; }
+section { display: flex; flex-direction: column; gap: 14px; }
+
+/* goal strip */
+.goal { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.goal > div { background: var(--paper); padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.goal .k { font-family: var(--f-mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.goal .v { font-weight: 700; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+
+/* phases */
+.phases { display: grid; grid-template-columns: repeat(4, 1fr) .55fr; gap: 6px; }
+.ph { border-top: 4px solid var(--line); padding-top: 8px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ph b { font-size: .92rem; }
+.ph span { font-size: .78rem; color: var(--muted); line-height: 1.4; }
+.ph[data-w="1"] { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+.ph[data-w="2"] { border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); }
+.ph[data-w="3"] { border-color: color-mix(in srgb, var(--accent) 85%, var(--line)); }
+.ph[data-w="4"] { border-color: var(--accent); }
+.ph[data-w="5"] { border-color: var(--jp); }
+@media (max-width: 560px) { .phases { grid-template-columns: 1fr 1fr; } }
+
+/* calendar */
+.cal-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.count { font-family: var(--f-mono); font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.count b { color: var(--ok); }
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.dow { font-family: var(--f-mono); font-size: .7rem; letter-spacing: .08em; color: var(--muted); text-align: center; padding-bottom: 2px; }
+.tile { appearance: none; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 6px; padding: 7px 7px 8px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 1px; cursor: pointer; text-align: left; min-width: 0; font: inherit; position: relative; }
+.tile:hover { border-color: var(--muted); }
+.tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tile .d { font-family: var(--f-mono); font-size: .68rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tile .t { font-weight: 700; font-size: .86rem; line-height: 1.25; overflow-wrap: anywhere; }
+.tile .r { display: block; font-family: var(--f-mono); font-size: .62rem; font-weight: 500; color: var(--muted); }
+.tile .dt { font-size: .68rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tile.rest { background: var(--chip); }
+.tile.rest .t { color: var(--muted); font-weight: 500; }
+.tile.special .t { color: var(--jp); }
+.tile.sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.tile.today::after { content: "오늘"; position: absolute; top: 6px; right: 6px; font-size: .62rem; font-weight: 700; color: var(--accent); }
+.tile.done { background: var(--ok-soft); border-color: color-mix(in srgb, var(--ok) 45%, var(--line)); }
+.tile.done .d::before { content: "✓ "; color: var(--ok); font-weight: 700; }
+.blank { visibility: hidden; }
+@media (max-width: 480px) { .tile .t { font-size: .74rem; } .tile .r { display: block; font-family: var(--f-mono); font-size: .62rem; font-weight: 500; color: var(--muted); }
+.tile .dt { display: none; } .tile { padding: 6px 5px 7px; } }
+
+/* day card */
+.card { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+.card-top > div:first-child { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill { font-family: var(--f-mono); font-size: .72rem; padding: 2px 8px; border-radius: 3px; background: var(--chip); color: var(--muted); }
+.pill.hot { background: var(--accent-soft); color: var(--accent); }
+.btn { appearance: none; font: inherit; font-weight: 700; font-size: .9rem; border-radius: 6px; padding: 9px 16px; cursor: pointer;
+  border: 1px solid var(--accent); background: var(--accent); color: var(--paper); }
+.btn.on { background: var(--ok-soft); color: var(--ok); border-color: var(--ok); }
+.btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.navs { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.ghost { appearance: none; font: inherit; font-size: .85rem; border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 6px; padding: 8px 12px; cursor: pointer; }
+.ghost:disabled { opacity: .35; cursor: default; }
+.tbl { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .93rem; }
+th, td { text-align: left; padding: 10px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--f-mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+td.n { font-family: var(--f-mono); font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 600; }
+td .tip { display: block; font-size: .8rem; color: var(--muted); }
+td .exc { display: flex; gap: 12px; align-items: center; min-width: 0; }
+td .exc > div { min-width: 0; }
+canvas.fig { width: 84px; height: 84px; flex: none; background: var(--bg); border-radius: 6px; }
+.gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.gal figure { margin: 0; background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.gal canvas { width: 100%; aspect-ratio: 1; max-width: 100%; background: var(--bg); border-radius: 4px; }
+.gal figcaption { display: flex; flex-direction: column; gap: 2px; }
+.gal figcaption b { font-size: .88rem; line-height: 1.35; }
+.gal figcaption span { font-size: .78rem; color: var(--muted); line-height: 1.45; }
+.gal h3 { grid-column: 1 / -1; font-family: var(--f-mono); font-size: .74rem; letter-spacing: .1em; color: var(--muted); font-weight: 500; text-transform: uppercase; padding-top: 6px; }
+.legend { font-size: .85rem; color: var(--muted); }
+.legend i { display: inline-block; width: 14px; height: 4px; border-radius: 2px; background: var(--accent); vertical-align: 3px; margin-right: 4px; }
+tr.logrow td { padding-top: 0; }
+tr:has(+ tr.logrow) td { border-bottom: 0; }
+.sets { display: flex; flex-direction: column; gap: 8px; padding-left: 96px; }
+.prev { font-size: .78rem; color: var(--muted); font-family: var(--f-mono); }
+.setgrid { display: flex; flex-wrap: wrap; gap: 6px 10px; }
+.set { display: inline-flex; align-items: center; gap: 4px; background: var(--chip); border-radius: 6px; padding: 4px 8px 4px 6px; }
+.set .sn { font-family: var(--f-mono); font-size: .7rem; color: var(--muted); width: 1.1em; text-align: center; }
+.set input { width: 4.3em; font: inherit; font-size: .92rem; font-variant-numeric: tabular-nums; padding: 4px 5px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); color: var(--ink); text-align: right; }
+.set input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.set input::placeholder { color: var(--muted); opacity: .55; }
+.set .u { font-size: .74rem; color: var(--muted); margin-right: 2px; }
+@media (max-width: 520px) { .sets { padding-left: 0; } }
+.savestate { font-size: .82rem; color: var(--muted); margin: 0; }
+.savestate[data-kind="error"], .savestate[data-kind="full"] { color: var(--accent); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chipv { font-size: .78rem; background: var(--chip); border-radius: 4px; padding: 2px 7px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.histt td:first-child { white-space: normal; }
+tr.main td:first-child b::after { content: "메인"; font-family: var(--f-mono); font-size: .62rem; color: var(--accent); background: var(--accent-soft); padding: 1px 5px; border-radius: 3px; margin-left: 6px; vertical-align: 2px; }
+.note { font-size: .9rem; background: var(--chip); border-radius: 6px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.note b { font-size: .86rem; }
+ul.plain { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 6px; }
+
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.rule { border-top: 1px solid var(--line); padding-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.rule p { font-size: .92rem; color: var(--muted); }
+.foot { font-size: .82rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; display: flex; flex-direction: column; gap: 4px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:12px">
+    <span class="eyebrow">퇴사 후 챌린지 · 운동 · 11.6 – 12.5</span>
+    <h1>30일 운동 루틴</h1>
+    <p class="lede">목표는 어깨, 팔, 전완이 굵어지는 몸입니다. 초보자 기준으로 하루 4종목만 하고, 요일마다 같은 루틴을 반복해서 동작을 빨리 익히게 짰습니다. 어깨·이두·삼두는 일주일에 두 번씩 들어가요. 날짜를 누르면 그날 할 운동과 동작 그림이 나옵니다.</p>
+  </header>
+
+  <div class="goal">
+    <div><span class="k">현재</span><span class="v">76kg</span></div>
+    <div><span class="k">분할</span><span class="v">요일별 5분할</span></div>
+    <div><span class="k">주당</span><span class="v">평일 5일 · 주말 휴식</span></div>
+    <div><span class="k">1회</span><span class="v">4종목 · 45–60분</span></div>
+  </div>
+
+  <section>
+    <h2>4주 흐름</h2>
+    <div class="phases">
+      <div class="ph" data-w="1"><b>11.6–15 · 적응</b><span>폼 익히기, 첫 무게 찾기. 2–3회 남기고 끝내기</span></div>
+      <div class="ph" data-w="2"><b>11.16–22 · 볼륨</b><span>메인 종목 +1세트. 2회 남기고</span></div>
+      <div class="ph" data-w="3"><b>11.23–29 · 증량</b><span>반복 상한 채우면 다음에 무게 올리기</span></div>
+      <div class="ph" data-w="4"><b>11.30–12.2 · 밀어붙이기</b><span>마지막 세트는 1회 남기거나 실패 직전까지</span></div>
+      <div class="ph" data-w="5"><b>12.3–4</b><span>가볍게 · 측정</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="cal-head">
+      <h2>달력</h2>
+      <span class="count" id="count">완료 <b>0</b> / 21 운동일</span>
+    </div>
+    <div class="cal" id="cal"></div>
+  </section>
+
+  <section>
+    <div class="card" id="card"></div>
+    <p class="savestate" id="saveState" aria-live="polite"></p>
+  </section>
+
+  <section>
+    <h2>운동 기록</h2>
+    <div id="hist"></div>
+  </section>
+
+  <section>
+    <h2>데이터 파일</h2>
+    <p class="lede">기록 전체를 JSON 파일 하나로 저장하고 불러와요. 내보내기를 누르면 공유 창이 열리고, "파일에 저장"을 고르면 아이폰 파일 앱이나 iCloud Drive에 들어가요.</p>
+    <div class="navs">
+      <button type="button" class="btn" id="exportBtn">파일로 내보내기</button>
+      <button type="button" class="ghost" id="importBtn">파일에서 불러오기</button>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+    </div>
+    <p class="savestate" id="fileState" aria-live="polite"></p>
+  </section>
+
+  <section>
+    <h2>동작 모음</h2>
+    <p class="legend"><i></i>주황색이 이번 동작에서 주로 움직이는 부위예요. 옆에서 본 모습이 기본이고, 옆으로 드는 동작만 앞에서 본 모습입니다.</p>
+    <div class="gal" id="gal"></div>
+  </section>
+
+  <section>
+    <h2>매번 지키는 규칙</h2>
+    <div class="rules">
+      <div class="rule"><h3>워밍업 10분</h3><p>가벼운 유산소 5분, 봉이나 수건으로 견갑·등 풀기, 첫 종목은 가벼운 무게로 2세트 먼저. Shuru가 가장 강조한 게 가동범위예요.</p></div>
+      <div class="rule"><h3>무게·횟수·세트 기록</h3><p>세트가 끝날 때마다 카드의 칸에 무게와 횟수를 적기. 흐리게 보이는 숫자가 지난번 기록이에요. 그 숫자보다 1회나 1단계 무게를 넘기는 게 목표.</p></div>
+      <div class="rule"><h3>증량 규칙</h3><p>모든 세트가 반복 범위 상한에 닿으면 다음에 상체 2.5kg, 하체 5kg 올리고 다시 하한부터.</p></div>
+      <div class="rule"><h3>휴식 시간</h3><p>메인 종목 2–3분, 보조 종목 60–90초. 휴식 중에 쉐도잉 대사를 한 줄씩 외워도 좋아요.</p></div>
+      <div class="rule"><h3>유산소</h3><p>월·수·금 운동 뒤 존2 걷기 20분. 살을 빼는 게 목표가 아니라서 이 정도면 충분해요. 일요일엔 40분 걷기(토요일은 완전히 쉬기).</p></div>
+      <div class="rule"><h3>아프면 멈추기</h3><p>근육이 뻐근한 건 괜찮지만, 관절이 찌릿하거나 아프면 그 종목은 빼고 다음 날 다시 확인.</p></div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <span>Shuru는 6분할로 하루 1부위를 2–3시간 합니다. 초보자는 종목 수보다 같은 동작을 자주 반복해 무게를 늘리는 게 빨라서, 종목을 17개로 줄이고 어깨와 팔을 주 2회씩 넣었습니다. 광배(등 넓이)는 화요일 등 운동에 합쳤어요.</span>
+    <span>12월 초 포항 이동과 겹치는 날은 헬스장이 없으면 카드 안의 대체 루틴으로 하세요.</span>
+    <span>기록과 완료 체크는 이 폰에만 저장되고 서버로 보내지 않아요. 폰을 바꾸거나 사파리 데이터를 지우기 전에는 꼭 파일로 내보내 두세요.</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  const L = { T: 30, UA: 15, FA: 14, TH: 19, SH: 19, FT: 7, HR: 6 };
+  const rad = (a) => a * Math.PI / 180;
+  const deg = (r) => r * 180 / Math.PI;
+  const P = (p, a, l) => ({ x: p.x + l * Math.sin(rad(a)), y: p.y - l * Math.cos(rad(a)) });
+  const angOf = (a, b) => deg(Math.atan2(b.x - a.x, -(b.y - a.y)));
+  function ik(a, c, l1, l2, kd) {
+    let dx = c.x - a.x, dy = c.y - a.y, d = Math.hypot(dx, dy) || 0.001;
+    const mx = l1 + l2 - 0.05, mn = Math.abs(l1 - l2) + 0.05;
+    if (d > mx) { c = { x: a.x + dx / d * mx, y: a.y + dy / d * mx }; d = mx; dx = c.x - a.x; dy = c.y - a.y; }
+    if (d < mn) { c = { x: a.x + dx / d * mn, y: a.y + dy / d * mn }; d = mn; dx = c.x - a.x; dy = c.y - a.y; }
+    const t = (l1 * l1 - l2 * l2 + d * d) / (2 * d), h = Math.sqrt(Math.max(0, l1 * l1 - t * t));
+    const ux = dx / d, uy = dy / d, m = { x: a.x + ux * t, y: a.y + uy * t };
+    const p1 = { x: m.x - uy * h, y: m.y + ux * h }, p2 = { x: m.x + uy * h, y: m.y - ux * h };
+    const s = (p) => (p.x - m.x) * kd[0] + (p.y - m.y) * kd[1];
+    return [s(p1) >= s(p2) ? p1 : p2, c];
+  }
+
+  function side(q) {
+    const hip = { x: q.hx, y: q.hy };
+    const sh = P(hip, q.t, L.T);
+    const head = P(sh, q.hd != null ? q.hd : q.t, 3 + L.HR);
+    function arm(s) {
+      const hand = q['hand' + s], handR = q['handR' + s];
+      if (hand || handR) {
+        const tg = hand ? { x: hand[0], y: hand[1] } : { x: sh.x + handR[0], y: sh.y + handR[1] };
+        const r = ik(sh, tg, L.UA, L.FA, q['ekd' + s] || q.ekd || [0, 1]);
+        return { el: r[0], ha: r[1] };
+      }
+      let ua = q['ua' + s], fa = q['fa' + s];
+      if (q['uaR' + s] != null) { ua = q.t + q['uaR' + s]; fa = q.t + q['faR' + s]; }
+      const el = P(sh, ua, L.UA);
+      const ha = P(el, fa, L.FA);
+      return { el, ha, gp: q['wr' + s] != null ? P(ha, q['wr' + s], 6) : null };
+    }
+    function leg(s) {
+      let kn, an;
+      const ank = q['ank' + s];
+      if (ank) { const r = ik(hip, { x: ank[0], y: ank[1] }, L.TH, L.SH, q['kkd' + s] || q.kkd || [1, 0]); kn = r[0]; an = r[1]; }
+      else { kn = P(hip, q['th' + s], L.TH); an = P(kn, q['sh' + s], L.SH); }
+      const ft = q['ft' + s] != null ? q['ft' + s] : angOf(kn, an) - 90;
+      return { kn, an, toe: P(an, ft, L.FT) };
+    }
+    const a1 = arm(''), l1 = leg('');
+    const a2 = (q.ua2 != null || q.hand2 || q.handR2 || q.uaR2 != null) ? arm('2') : a1;
+    const l2 = (q.th2 != null || q.ank2) ? leg('2') : l1;
+    return { hip, sh, head, a1, a2, l1, l2 };
+  }
+
+  function front(q) {
+    const cx = q.cx, sy = q.sy, hy = q.hy, bend = q.bend || 0;
+    const head = { x: cx, y: sy - (3 + L.HR) * Math.cos(rad(bend)) - (bend ? 2 : 0) };
+    const arms = [-1, 1].map((dir) => {
+      const k = dir < 0 ? 'L' : 'R';
+      const el = q['el' + k] != null ? q['el' + k] : q.el, eb = q['eb' + k] != null ? q['eb' + k] : (q.eb || 0);
+      const hz = q['hz' + k] != null ? q['hz' + k] : (q.hz || 0);
+      const s = { x: cx + dir * 9, y: sy };
+      let e = { x: s.x + dir * L.UA * Math.sin(rad(el)), y: s.y + L.UA * Math.cos(rad(el)) };
+      let h = { x: e.x + dir * L.FA * Math.sin(rad(el + eb)), y: e.y + L.FA * Math.cos(rad(el + eb)) };
+      const sq = (p) => { const dx = p.x - s.x; return { x: s.x + dx * Math.cos(rad(hz)) - dir * Math.sin(rad(hz)) * 9 * Math.abs(dx) / 29, y: p.y }; };
+      if (hz) { e = sq(e); h = sq(h); }
+      return { s, e, h };
+    });
+    const legs = [-1, 1].map((dir) => {
+      const hp = { x: cx + dir * 5, y: hy };
+      if (q.seated) { const kn = { x: cx + dir * 8, y: hy + 5 }; return { hp, kn, an: { x: cx + dir * 9, y: hy + 5 + L.SH } }; }
+      const an = { x: cx + dir * 8, y: 110 };
+      return { hp, kn: { x: (hp.x + an.x) / 2 + dir * 1, y: (hp.y + an.y) / 2 }, an };
+    });
+    return { head, arms, legs, cx, sy, hy };
+  }
+
+  function lerp(a, b, f) {
+    const o = {};
+    for (const k in a) {
+      const va = a[k], vb = b[k] != null ? b[k] : va;
+      if (typeof va === 'number') o[k] = va + (vb - va) * f;
+      else if (Array.isArray(va) && typeof va[0] === 'number') o[k] = va.map((x, i) => x + (vb[i] - x) * f);
+      else o[k] = va;
+    }
+    return o;
+  }
+
+  const S = (o) => Object.assign({ view: 'side' }, o);
+  const pad = (x1, y1, x2, y2) => ({ k: 'pad', x1, y1, x2, y2 });
+  const post = (x1, y1, x2, y2) => ({ k: 'post', x1, y1, x2, y2 });
+  const plate = (at, r, dx, dy) => ({ k: 'plate', at, r: r || 9, dx: dx || 0, dy: dy || 0 });
+  const db = (at) => ({ k: 'db', at });
+  const cable = (x, y, at) => ({ k: 'cable', x, y, at: at || 'hand' });
+  const roller = (at, dx, dy) => ({ k: 'roller', at, dx: dx || 0, dy: dy || 0 });
+  const dot = (x, y, r) => ({ k: 'dot', x, y, r: r || 2.5 });
+  const box = (x, y, w, h) => ({ k: 'box', x, y, w, h });
+  const stand = { th: 180, sh: 180 };
+
+  const incline30 = [pad(60, 89.5, 34, 74.5), pad(56, 90, 74, 90), post(60, 90, 60, 110)];
+  const flatBench = [pad(18, 88, 84, 88), post(28, 90, 28, 110), post(74, 90, 74, 110)];
+  const machineSeat = [pad(35, 89, 60, 89), pad(41.5, 87, 38.9, 58), post(45, 90, 45, 110)];
+
+  const EX = {
+    '벤치프레스': S({ hl: ['ua', 'fa'], props: [...flatBench, plate('hand')],
+      A: { hx: 66, hy: 84, t: -90, ua: 3, fa: 0, th: 105, sh: 182 }, B: { ua: 110, fa: -10 },
+      cue: '바를 가슴 아래쪽으로 내렸다가 어깨 위로 밀어 올리기' }),
+    '인클라인 덤벨프레스': S({ hl: ['ua', 'fa'], props: [...incline30, db('hand')],
+      A: { hx: 62, hy: 86, t: -60, ua: 0, fa: 0, th: 95, sh: 180 }, B: { ua: 200, fa: 10 },
+      cue: '덤벨을 윗가슴 옆까지 내렸다가 위로' }),
+    '체스트 플라이 (머신)': { view: 'front', hl: ['ua', 'fa'], props: [{ k: 'fseat' }, { k: 'fhandle' }],
+      A: { cx: 60, sy: 50, hy: 80, seated: 1, el: 90, eb: 0, hz: 0 }, B: { hz: 85 },
+      cue: '팔을 크게 벌렸다가 가슴 앞에서 모으기' },
+    '덤벨 숄더프레스': { view: 'front', hl: ['ua', 'fa'], props: [{ k: 'fseat' }, { k: 'fdb' }],
+      A: { cx: 60, sy: 50, hy: 80, seated: 1, el: 90, eb: 90 }, B: { el: 165, eb: 10 },
+      cue: '귀 옆에서 머리 위로 밀어 올리기' },
+    '사이드 레터럴 레이즈': { view: 'front', hl: ['ua', 'fa'], props: [{ k: 'fdb' }],
+      A: { cx: 60, sy: 42, hy: 72, el: 12, eb: 0 }, B: { el: 88 },
+      cue: '어깨 높이까지만 옆으로 들기' },
+    '케이블 푸시다운': S({ hl: ['fa'], props: [post(86, 4, 86, 110), cable(82, 8)],
+      A: Object.assign({ hx: 58, hy: 72, t: 10, ua: 178, fa: 40 }, stand), B: { fa: 175 },
+      cue: '팔꿈치는 옆구리에 붙인 채 아래로 펴기' }),
+    '랫풀다운': S({ hl: ['ua'], props: [pad(40, 95, 58, 95), post(50, 95, 50, 110), dot(70, 86, 3), cable(47, 4)],
+      A: { hx: 50, hy: 91, t: -10, ua: 8, fa: 5, th: 90, sh: 180 }, B: { ua: 200, fa: 20 },
+      cue: '바를 쇄골 쪽으로, 팔꿈치를 옆구리로 끌어내리기' }),
+    '시티드 케이블 로우': S({ hl: ['ua'], props: [pad(30, 99, 50, 99), post(40, 99, 40, 110), pad(81, 85, 81, 101), cable(94, 78)],
+      A: { hx: 40, hy: 95, t: 15, ua: 85, fa: 88, th: 80, sh: 100 }, B: { t: -5, ua: 230, fa: 95 },
+      cue: '가슴을 펴고 손잡이를 배꼽 쪽으로' }),
+    '원암 덤벨 로우': S({ hl: ['ua'], props: [pad(14, 88, 82, 88), post(22, 90, 22, 110), post(74, 90, 74, 110), db('hand')],
+      A: { hx: 40, hy: 69, t: 70.5, ua: 175, fa: 180, ua2: 180, fa2: 180, th: 175, sh: 180, th2: 180, sh2: 270 }, B: { ua: 300, fa: 180 },
+      cue: '덤벨을 엉덩이 쪽으로 당기기' }),
+    '페이스풀': S({ hl: ['ua'], props: [post(100, 4, 100, 110), cable(96, 38)],
+      A: Object.assign({ hx: 50, hy: 72, t: -5, ua: 85, fa: 85 }, stand), B: { ua: 270, fa: 60 },
+      cue: '로프를 얼굴 쪽으로, 팔꿈치는 높게' }),
+    'EZ바 컬': S({ hl: ['fa'], props: [plate('hand', 7)],
+      A: Object.assign({ hx: 55, hy: 72, t: 0, ua: 178, fa: 178 }, stand), B: { fa: 20 },
+      cue: '팔꿈치 고정, 반동 없이 말아 올리기' }),
+    '해머컬': S({ hl: ['fa'], props: [db('hand'), db('hand2')],
+      A: Object.assign({ hx: 55, hy: 72, t: 0, ua: 178, fa: 178, ua2: 180, fa2: 180 }, stand), B: { fa: 20 },
+      cue: '손바닥이 서로 마주 보게 들기' }),
+    '바벨 스쿼트': S({ hl: ['th', 'sh'], props: [plate('sh', 9, -2, -2)],
+      A: { hx: 55, hy: 72, t: 8, handR: [-3, -1], ank: [57, 110] }, B: { hx: 40, hy: 92, t: 45 },
+      cue: '엉덩이를 뒤로 빼며 허벅지가 바닥과 평행할 때까지' }),
+    '루마니안 데드리프트': S({ hl: ['t', 'th'], props: [plate('hand')],
+      A: { hx: 55, hy: 72, t: 0, ua: 180, fa: 180, ank: [57, 110] }, B: { hx: 40, hy: 75, t: 65 },
+      cue: '무릎은 살짝만 굽히고 엉덩이를 뒤로' }),
+    '레그프레스': S({ hl: ['th', 'sh'], props: [pad(41, 92, 12, 81.5), post(40, 95, 40, 110), post(46, 98, 104, 40), { k: 'sled', at: 'ank' }],
+      A: { hx: 40, hy: 88, t: -70, ank: [65.5, 62.5], kkd: [-1, -1], ua: 200, fa: 110 }, B: { ank: [52, 76] },
+      cue: '무릎을 가슴 쪽으로 접었다가 밀기' }),
+    '라잉 레그컬': S({ hl: ['sh'], props: [pad(20, 88, 92, 88), post(30, 90, 30, 110), post(82, 90, 82, 110), roller('ank', 0, -4)],
+      A: { hx: 60, hy: 84, t: -90, ua: 190, fa: 170, th: 90, sh: 90 }, B: { sh: -5 },
+      cue: '뒤꿈치를 엉덩이 쪽으로 당기기' }),
+    '스탠딩 카프레이즈': S({ hl: ['sh'], props: [box(54, 104, 22, 6)],
+      A: Object.assign({ hx: 58.5, hy: 68.7, t: 0, ua: 180, fa: 180, ft: 70 }, stand), B: { hx: 59.4, hy: 61.4, ft: 125 },
+      cue: '발끝으로 끝까지 올라가기' }),
+    '디클라인 크런치': S({ hl: ['t'], props: [pad(20, 97, 86, 75), post(30, 94, 30, 110), post(78, 78, 78, 110), dot(86, 71, 3.5)],
+      A: { hx: 62, hy: 80, t: -109, uaR: 120, faR: -20, th: 30, sh: 140 }, B: { t: -25 },
+      cue: '등을 둥글게 말며 상체를 들기' }),
+    '오버헤드프레스 (바벨/덤벨)': S({ hl: ['ua', 'fa'], props: [plate('hand')],
+      A: Object.assign({ hx: 55, hy: 72, t: 0, ua: 160, fa: 10 }, stand), B: { ua: 5, fa: 0 },
+      cue: '쇄골 앞에서 머리 위로 똑바로' }),
+    '인클라인 벤치프레스': S({ hl: ['ua', 'fa'], props: [...incline30, plate('hand')],
+      A: { hx: 62, hy: 86, t: -60, ua: 0, fa: 0, th: 95, sh: 180 }, B: { ua: 205, fa: 20 },
+      cue: '바를 윗가슴까지 내렸다가 위로' }),
+    '딥스 (어시스트 가능)': S({ hl: ['ua', 'fa'], props: [post(42, 62, 42, 110), post(78, 62, 78, 110), pad(38, 62, 82, 62)],
+      A: { hx: 51.8, hy: 63.5, t: 10, hand: [60, 62], ekd: [-1, 0], th: 190, sh: 250 }, B: { hx: 45.3, hy: 77.2, t: 25 },
+      cue: '어깨가 팔꿈치 높이 근처까지 내려가기' }),
+    '케이블 레터럴 레이즈': { view: 'front', hl: ['ua', 'fa'], props: [{ k: 'fcable', x: 30, y: 106 }],
+      A: { cx: 60, sy: 42, hy: 72, elL: 5, elR: 8, eb: 0 }, B: { elR: 86 },
+      cue: '반대쪽 아래 케이블을 어깨 높이까지' },
+    '리어델트 플라이': { view: 'front', hl: ['ua', 'fa'], props: [{ k: 'fdb' }],
+      A: { cx: 60, sy: 58, hy: 70, bend: 70, el: 6, eb: 0 }, B: { el: 84 },
+      cue: '상체를 숙인 채 팔을 옆으로 벌리기' },
+    '오버헤드 케이블 익스텐션': S({ hl: ['fa'], props: [post(18, 60, 18, 110), cable(22, 100)],
+      A: Object.assign({ hx: 58, hy: 72, t: 12, ua: -12, fa: 200 }, stand), B: { fa: -8 },
+      cue: '팔꿈치는 고정하고 머리 위로 펴기' }),
+    '턱걸이 (어시스트 가능)': S({ hl: ['ua'], props: [post(30, 12, 30, 110), pad(30, 12, 62, 12), dot(60, 12, 2.4)],
+      A: { hx: 56.4, hy: 69.9, t: 5, hand: [60, 12], ekd: [1, 0.3], th: 175, sh: 250 }, B: { hx: 58.6, hy: 48.9, t: -5 },
+      cue: '가슴을 바 쪽으로, 턱이 바를 넘을 때까지' }),
+    '바벨 로우': S({ hl: ['ua'], props: [plate('hand')],
+      A: { hx: 45, hy: 74, t: 65, ua: 180, fa: 180, ank: [55, 110] }, B: { ua: 260, fa: 160 },
+      cue: '상체를 숙인 채 바를 배꼽 쪽으로' }),
+    '스트레이트암 풀다운': S({ hl: ['ua'], props: [post(100, 4, 100, 110), cable(96, 10)],
+      A: { hx: 50, hy: 72, t: 20, ua: 60, fa: 60, ank: [52, 110] }, B: { ua: 170, fa: 170 },
+      cue: '팔을 편 채 허벅지 앞까지 내리기' }),
+    '인클라인 덤벨 컬': S({ hl: ['fa'], props: [pad(57.2, 90.8, 36, 69.6), pad(55, 91, 72, 91), post(58, 91, 58, 110), db('hand')],
+      A: { hx: 60, hy: 88, t: -45, ua: 180, fa: 180, th: 95, sh: 180 }, B: { fa: 30 },
+      cue: '팔을 늘어뜨린 상태에서 말아 올리기' }),
+    '케이블 컬': S({ hl: ['fa'], props: [post(86, 70, 86, 110), cable(82, 106)],
+      A: Object.assign({ hx: 52, hy: 72, t: 0, ua: 178, fa: 175 }, stand), B: { fa: 20 },
+      cue: '팔꿈치 고정, 끝에서 1초 쥐기' }),
+    '행잉 레그레이즈': S({ hl: ['th'], props: [post(30, 8, 30, 110), pad(30, 8, 62, 8), dot(60, 8, 2.4)],
+      A: Object.assign({ hx: 60, hy: 66, t: 0, hand: [60, 8], ekd: [1, 0] }, stand), B: { th: 80, sh: 95 },
+      cue: '반동 없이 다리를 앞으로 들어 올리기' }),
+    '데드리프트': S({ hl: ['t', 'th'], props: [plate('hand')],
+      A: { hx: 34, hy: 84, t: 62, ua: 180, fa: 180, ank: [56, 110] }, B: { hx: 54, hy: 72, t: 0 },
+      cue: '허리를 편 채 바를 다리에 붙여 일어서기' }),
+    '불가리안 스플릿 스쿼트': S({ hl: ['th', 'sh'], props: [pad(6, 88, 34, 88), post(20, 90, 20, 110), db('hand')],
+      A: { hx: 54, hy: 74, t: 8, ua: 180, fa: 180, ank: [62, 110], ank2: [30, 85], kkd2: [0, 1], ft2: -90 }, B: { hx: 50, hy: 90 },
+      cue: '뒷발은 벤치에, 앞다리로 앉았다 일어서기' }),
+    '레그 익스텐션': S({ hl: ['sh'], props: [...machineSeat, roller('ank', 3, 0)],
+      A: { hx: 45, hy: 85, t: -5, ua: 175, fa: 150, th: 90, sh: 180 }, B: { sh: 95 },
+      cue: '무릎을 끝까지 펴고 1초 멈추기' }),
+    '시티드 레그컬': S({ hl: ['sh'], props: [...machineSeat, roller('ank', -3, 0)],
+      A: { hx: 45, hy: 85, t: -5, ua: 175, fa: 150, th: 90, sh: 95 }, B: { sh: 205 },
+      cue: '다리를 편 상태에서 의자 아래로 당기기' }),
+    '시티드 카프레이즈': S({ hl: ['sh'], props: [pad(30, 92, 52, 92), post(40, 92, 40, 110), roller('kn', 0, -4), box(58, 104, 18, 6)],
+      A: { hx: 40, hy: 88, t: 0, ua: 170, fa: 120, ank: [60, 107], kkd: [0, -1], ft: 62 }, B: { ank: [60, 101], ft: 118 },
+      cue: '앉은 채 뒤꿈치를 끝까지 들기' }),
+    '케이블 크런치': S({ hl: ['t'], props: [cable(66, 4)],
+      A: { hx: 55, hy: 89, t: 15, uaR: 25, faR: 235, th: 180, sh: 270 }, B: { hx: 50, hy: 88, t: 105 },
+      cue: '무릎 꿇고 등을 말아 팔꿈치를 허벅지로' }),
+    '리버스 컬': S({ hl: ['fa'], props: [plate('hand', 7)],
+      A: Object.assign({ hx: 55, hy: 72, t: 0, ua: 178, fa: 178 }, stand), B: { fa: 25 },
+      cue: '손등이 위로 오게 잡고 천천히 말아 올리기' }),
+    '리스트 컬': S({ hl: ['fa'], props: [pad(30, 95, 48, 95), post(39, 95, 39, 110), pad(57, 84, 82, 84), post(76, 86, 76, 110), plate('hand', 5)],
+      A: { hx: 40, hy: 92, t: 30, ua: 160, fa: 90, wr: 160, th: 90, sh: 180 }, B: { wr: 35 },
+      cue: '팔뚝은 벤치에 붙이고 손목만 위로 말기' }),
+    '고블릿 스쿼트': S({ hl: ['th', 'sh'], props: [db('hand')],
+      A: { hx: 55, hy: 72, t: 5, handR: [6, 9], ank: [57, 110] }, B: { hx: 42, hy: 92, t: 30 },
+      cue: '덤벨을 가슴 앞에 들고 깊게 앉기' })
+  };
+
+  let C = {};
+  function readColors(el) {
+    const cs = getComputedStyle(el);
+    C = { ink: cs.getPropertyValue('--ink').trim() || '#222', muted: cs.getPropertyValue('--muted').trim() || '#777',
+      line: cs.getPropertyValue('--line').trim() || '#ccc', accent: cs.getPropertyValue('--accent').trim() || '#e55',
+      paper: cs.getPropertyValue('--paper').trim() || '#fff', chip: cs.getPropertyValue('--chip').trim() || '#eee' };
+  }
+
+  function seg(g, a, b, col, w) { g.strokeStyle = col; g.lineWidth = w; g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.stroke(); }
+  function circ(g, p, r, fill, stroke) { g.beginPath(); g.arc(p.x, p.y, r, 0, Math.PI * 2); if (fill) { g.fillStyle = fill; g.fill(); } if (stroke) { g.strokeStyle = stroke; g.lineWidth = 1.6; g.stroke(); } }
+
+  function drawSide(g, ex, q) {
+    const k = side(q), hl = ex.hl || [];
+    const col = (s) => hl.includes(s) ? C.accent : C.ink;
+    const pts = { hand: k.a1.gp || k.a1.ha, hand2: k.a2.ha, sh: k.sh, ank: k.l1.an, kn: k.l1.kn, hip: k.hip };
+    (ex.props || []).forEach((p) => {
+      if (p.k === 'pad') seg(g, { x: p.x1, y: p.y1 }, { x: p.x2, y: p.y2 }, C.muted, 4.5);
+      else if (p.k === 'post') seg(g, { x: p.x1, y: p.y1 }, { x: p.x2, y: p.y2 }, C.line, 2.4);
+      else if (p.k === 'box') { g.fillStyle = C.line; g.fillRect(p.x, p.y, p.w, p.h); }
+      else if (p.k === 'cable') { seg(g, { x: p.x, y: p.y }, pts[p.at], C.muted, 1.2); circ(g, { x: p.x, y: p.y }, 2.4, C.muted); }
+      else if (p.k === 'dot' && p.r) circ(g, { x: p.x, y: p.y }, p.r, C.muted);
+    });
+    const W = 4.4;
+    g.globalAlpha = 0.38;
+    seg(g, k.hip, k.l2.kn, col('th'), W); seg(g, k.l2.kn, k.l2.an, col('sh'), W); seg(g, k.l2.an, k.l2.toe, C.ink, W - 1);
+    seg(g, k.sh, k.a2.el, col('ua'), W - 0.6); seg(g, k.a2.el, k.a2.ha, col('fa'), W - 0.6);
+    g.globalAlpha = 1;
+    seg(g, k.hip, k.l1.kn, col('th'), W); seg(g, k.l1.kn, k.l1.an, col('sh'), W); seg(g, k.l1.an, k.l1.toe, C.ink, W - 1);
+    seg(g, k.hip, k.sh, col('t'), W + 1.6);
+    circ(g, k.head, L.HR, C.ink);
+    seg(g, k.sh, k.a1.el, col('ua'), W - 0.6); seg(g, k.a1.el, k.a1.ha, col('fa'), W - 0.6);
+    if (k.a1.gp) seg(g, k.a1.ha, k.a1.gp, col('fa'), W - 1.6);
+    (ex.props || []).forEach((p) => {
+      if (p.k === 'plate') { const c = pts[p.at]; circ(g, { x: c.x + p.dx, y: c.y + p.dy }, p.r, null, C.muted); circ(g, { x: c.x + p.dx, y: c.y + p.dy }, 1.6, C.muted); }
+      else if (p.k === 'db') { const c = pts[p.at]; g.fillStyle = C.muted; g.fillRect(c.x - 4, c.y - 2.6, 8, 5.2); }
+      else if (p.k === 'roller') { const c = pts[p.at]; circ(g, { x: c.x + p.dx, y: c.y + p.dy }, 3.4, C.muted); }
+      else if (p.k === 'sled') { const c = k.l1.toe; const a = { x: c.x - 9 * 0.707, y: c.y - 9 * 0.707 }, b = { x: c.x + 9 * 0.707, y: c.y + 9 * 0.707 }; seg(g, a, b, C.muted, 4); }
+    });
+  }
+
+  function drawFront(g, ex, q) {
+    const k = front(q), hl = ex.hl || [];
+    const col = (s) => hl.includes(s) ? C.accent : C.ink;
+    const W = 4.4;
+    (ex.props || []).forEach((p) => {
+      if (p.k === 'fseat') { seg(g, { x: k.cx - 16, y: k.hy + 3 }, { x: k.cx + 16, y: k.hy + 3 }, C.muted, 4.5); seg(g, { x: k.cx, y: k.hy + 5 }, { x: k.cx, y: 110 }, C.line, 2.4); }
+      else if (p.k === 'fcable') { seg(g, { x: p.x, y: p.y }, k.arms[1].h, C.muted, 1.2); circ(g, { x: p.x, y: p.y }, 2.4, C.muted); }
+    });
+    k.legs.forEach((l) => { seg(g, l.hp, l.kn, C.ink, W); seg(g, l.kn, l.an, C.ink, W); });
+    seg(g, { x: k.cx - 5, y: k.hy }, { x: k.cx + 5, y: k.hy }, C.ink, W);
+    seg(g, { x: k.cx, y: k.sy }, { x: k.cx, y: k.hy }, col('t'), W + 1.6);
+    seg(g, { x: k.cx - 9, y: k.sy }, { x: k.cx + 9, y: k.sy }, C.ink, W);
+    circ(g, k.head, L.HR, C.ink);
+    k.arms.forEach((a) => { seg(g, a.s, a.e, col('ua'), W - 0.6); seg(g, a.e, a.h, col('fa'), W - 0.6); });
+    (ex.props || []).forEach((p) => {
+      if (p.k === 'fdb') k.arms.forEach((a) => { g.fillStyle = C.muted; g.fillRect(a.h.x - 2.6, a.h.y - 4, 5.2, 8); });
+      if (p.k === 'fhandle') k.arms.forEach((a) => circ(g, a.h, 2.6, C.muted));
+    });
+  }
+
+  function phase(ms) {
+    const T = 2800, f = (ms % T) / T;
+    const ease = (x) => x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
+    if (f < 0.12) return 0;
+    if (f < 0.47) return ease((f - 0.12) / 0.35);
+    if (f < 0.6) return 1;
+    if (f < 0.95) return 1 - ease((f - 0.6) / 0.35);
+    return 0;
+  }
+
+  function draw(cv, name, f) {
+    const ex = EX[name]; if (!ex) return;
+    const dpr = window.devicePixelRatio || 1, sz = cv.clientWidth || 84;
+    if (cv.width !== Math.round(sz * dpr)) { cv.width = Math.round(sz * dpr); cv.height = Math.round(sz * dpr); }
+    const g = cv.getContext('2d');
+    g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cv.width, cv.height);
+    const s = cv.width / 120; g.setTransform(s, 0, 0, s, 0, 0);
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    seg(g, { x: 4, y: 110.5 }, { x: 116, y: 110.5 }, C.line, 1.4);
+    const q = lerp(ex.A, ex.B, f);
+    if (ex.view === 'front') drawFront(g, ex, q); else drawSide(g, ex, q);
+  }
+
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let frozen = null;
+  function loop(ms) {
+    const f = frozen != null ? frozen : reduce ? (Math.floor(ms / 1600) % 2) : phase(ms);
+    document.querySelectorAll('canvas[data-ex]').forEach((cv) => {
+      const r = cv.getBoundingClientRect();
+      if (r.bottom < -50 || r.top > innerHeight + 50) return;
+      draw(cv, cv.dataset.ex, f);
+    });
+    requestAnimationFrame(loop);
+  }
+  window.FIGS = {
+    has: (n) => !!EX[n], cue: (n) => EX[n] ? EX[n].cue : '', names: () => Object.keys(EX),
+    freeze: (f) => { frozen = f; },
+    start: () => { readColors(document.body); requestAnimationFrame(loop); }
+  };
+  if (window.matchMedia) {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const re = () => readColors(document.body);
+    mq.addEventListener ? mq.addEventListener('change', re) : mq.addListener(re);
+    new MutationObserver(re).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  }
+})();
+
+</script>
+<script>
+(function () {
+  const W = {
+    CS: { tile: '가슴', name: '가슴·어깨', focus: '월', ex: [
+      ['벤치프레스', 3, '8–10', '견갑을 모으고 가슴 아래쪽으로 내리기', 1],
+      ['인클라인 덤벨프레스', 3, '10', '윗가슴과 어깨 앞쪽이 같이 자라요', 0],
+      ['사이드 레터럴 레이즈', 3, '12–15', '어깨 넓이의 핵심. 가벼운 무게로 반동 없이', 1],
+      ['케이블 푸시다운', 3, '10–12', '팔꿈치 고정, 끝에서 1초', 0]] },
+    BB: { tile: '등', name: '등·이두', focus: '화', ex: [
+      ['랫풀다운', 3, '10', '등 넓이. 가슴 쪽으로, 팔꿈치로 끌어내리기', 1],
+      ['시티드 케이블 로우', 3, '10', '등 두께. 가슴 펴고 배꼽 쪽으로', 1],
+      ['EZ바 컬', 3, '8–10', '이두. 손목이 편한 W바 (Shuru 팁)', 0],
+      ['해머컬', 3, '10–12', '팔뚝 바깥쪽과 전완근을 같이 굵게', 0]] },
+    LG: { tile: '하체', name: '하체·복근', focus: '수', ex: [
+      ['레그프레스', 3, '10–12', '초보자는 스쿼트보다 자세 잡기 쉬워요', 1],
+      ['루마니안 데드리프트', 3, '10', '덤벨로 해도 OK. 허벅지 뒤가 늘어나는 느낌까지만', 1],
+      ['라잉 레그컬', 3, '12', '', 0],
+      ['디클라인 크런치', 3, '12–15', 'Shuru가 복근을 만든 종목', 0]] },
+    SA: { tile: '어깨', name: '어깨·삼두', focus: '목', ex: [
+      ['덤벨 숄더프레스', 3, '8–10', '어깨를 키우는 메인 종목', 1],
+      ['사이드 레터럴 레이즈', 3, '12–15', '이번 주 두 번째. 마지막 세트는 힘들 때까지', 1],
+      ['페이스풀', 3, '15', '어깨 뒤쪽을 채워야 옆에서 봐도 두꺼워요', 0],
+      ['오버헤드 케이블 익스텐션', 3, '12', '삼두가 팔 굵기의 2/3를 차지해요', 0]] },
+    AF: { tile: '팔', name: '팔·전완', focus: '금', ex: [
+      ['EZ바 컬', 3, '8–10', '이번 주 두 번째 이두. 화요일보다 1회라도 더', 1],
+      ['케이블 푸시다운', 3, '10–12', '이번 주 두 번째 삼두', 1],
+      ['리버스 컬', 3, '12', '손등이 위로 보이게. 전완근 윗부분', 0],
+      ['리스트 컬', 3, '15–20', '손목만 움직이기. 전완근 안쪽', 0]] }
+  };
+  const BYDAY = { 1: 'CS', 2: 'BB', 3: 'LG', 4: 'SA', 5: 'AF' };
+  const WEEK = {
+    0: { label: '맛보기', rir: '가볍게, 4–5회 남기고', extra: 0 },
+    1: { label: '1주 · 적응', rir: '2–3회 남기고', extra: 0 },
+    2: { label: '2주 · 볼륨', rir: '2회 남기고', extra: 1 },
+    3: { label: '3주 · 증량', rir: '1–2회 남기고', extra: 1 },
+    4: { label: '4주 · 밀어붙이기', rir: '마지막 세트 0–1회 남기고', extra: 1 }
+  };
+  const DOW = ['일', '월', '화', '수', '목', '금', '토'];
+  const start = new Date(2026, 10, 6);
+  const days = [];
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(start); d.setDate(start.getDate() + i);
+    const n = i + 1;
+    const wk = n <= 10 ? 1 : n <= 17 ? 2 : n <= 24 ? 3 : 4;
+    let kind, key = null;
+    if (n === 28) kind = 'deload';
+    else if (n === 29) kind = 'test';
+    else if (d.getDay() === 0) kind = 'rest';
+    else if (d.getDay() === 6) kind = 'off';
+    else { kind = 'work'; key = BYDAY[d.getDay()]; }
+    days.push({ n, d, wk, kind, key });
+  }
+
+  /* ---- 기록 저장: 로그인 상태면 계정(db), 아니면 이 브라우저 ---- */
+  const LSK = 'plan30-log-v1';
+  const store = { days: {}, mode: 'local', col: null, pend: {} };
+  try { store.days = JSON.parse(localStorage.getItem(LSK) || '{}') || {}; } catch (e) { store.days = {}; }
+  try { const old = JSON.parse(localStorage.getItem('plan30-done-v2') || '{}') || {}; for (const n in old) { const k = 'day-' + n; store.days[k] = Object.assign({ n: +n, sets: {} }, store.days[k], { done: true }); } } catch (e) {}
+  const saveLocal = () => { try { localStorage.setItem(LSK, JSON.stringify(store.days)); } catch (e) {} };
+  const isDoneN = (n) => !!(store.days['day-' + n] && store.days['day-' + n].done);
+  const isoOf = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  function docFor(n) {
+    const k = 'day-' + n;
+    if (!store.days[k]) store.days[k] = { n, date: isoOf(days[n - 1].d), done: false, sets: {} };
+    if (!store.days[k].sets) store.days[k].sets = {};
+    return store.days[k];
+  }
+  function setStatus(kind) {
+    const el = document.getElementById('saveState'); if (!el) return;
+    const map = {
+      loading: '기록 불러오는 중…', synced: '기록은 내 계정에 저장돼요. 휴대폰에서 열어도 그대로 보여요.', saving: '저장 중…', saved: '저장됨 · 내 계정',
+      local: '저장됨 · 이 폰. 가끔 아래 \'파일로 내보내기\'로 백업해 두세요.', slow: '저장소에 아직 연결되지 않았어요. 입력한 기록은 연결되면 저장돼요.',
+      error: '계정 저장에 실패해서 이 브라우저에 저장하고 있어요.', full: '저장 공간이 가득 찼어요. 오래된 기록을 지워야 새 기록을 저장할 수 있어요.'
+    };
+    el.textContent = map[kind] || ''; el.dataset.kind = kind;
+  }
+  function persist(n) {
+    const k = 'day-' + n; saveLocal();
+    if (store.mode !== 'db') { setStatus('local'); return; }
+    const p = store.pend[k] || (store.pend[k] = {});
+    clearTimeout(p.timer); setStatus('saving');
+    p.timer = setTimeout(() => flush(k), 700);
+  }
+  async function flush(k) {
+    const p = store.pend[k];
+    if (p.inflight) { p.dirty = true; return; }
+    p.inflight = true; p.timer = null;
+    try { await store.col.doc(k).set(JSON.parse(JSON.stringify(store.days[k]))); setStatus('saved'); }
+    catch (e) {
+      if (e && e.code === 'quota_exceeded') setStatus('full');
+      else if (e && e.code === 'unavailable') { p.inflight = false; setTimeout(() => flush(k), 1500 + Math.random() * 1000); return; }
+      else { store.mode = 'local'; setStatus('error'); }
+    }
+    p.inflight = false;
+    if (p.dirty) { p.dirty = false; flush(k); } else if (!p.timer) delete store.pend[k];
+  }
+  async function initStore() {
+    setStatus('local');
+    if (!window.claude || typeof window.claude.use !== 'function') return;
+    setStatus('loading');
+    const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    const id = user ? await user.id() : null;
+    if (!db || !id) { setStatus('local'); return; }
+    store.mode = 'db'; store.col = db.collection('data/users/' + id);
+    let first = true;
+    const timer = setTimeout(() => setStatus('slow'), 10000);
+    store.col.onSnapshot((snap) => {
+      if (!snap.metadata.fromCache) clearTimeout(timer);
+      if (first && !snap.metadata.fromCache) {
+        first = false;
+        if (snap.empty) { Object.keys(store.days).forEach((k) => { const n = +k.slice(4); if (n) persist(n); }); setStatus('synced'); return; }
+        setStatus('synced');
+      }
+      snap.docs.forEach((d) => { if (!store.pend[d.id]) store.days[d.id] = JSON.parse(JSON.stringify(d.data())); });
+      saveLocal();
+      const typing = document.activeElement && document.activeElement.closest && document.activeElement.closest('#card');
+      if (typing) renderCal(); else renderAll();
+    }, () => { clearTimeout(timer); store.mode = 'local'; setStatus('error'); });
+  }
+  function prevFor(name, n) {
+    for (let m = n - 1; m >= 1; m--) {
+      const d = store.days['day-' + m]; const arr = d && d.sets && d.sets[name];
+      if (arr && arr.some((x) => x && (x.w != null || x.r != null))) return { m, arr };
+    }
+    return null;
+  }
+  const fmtSet = (x) => (x.w != null ? x.w + 'kg' : '—') + '×' + (x.r != null ? x.r : '—');
+
+  const fmt = (d) => (d.getMonth() + 1) + '.' + d.getDate();
+  const now = new Date(); const todayKey = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+  const keyOf = (d) => d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  let sel = days.findIndex((x) => keyOf(x.d) === todayKey);
+  if (sel < 0) sel = todayKey < keyOf(days[0].d) ? 0 : 29;
+
+  const titleOf = (x) => x.kind === 'work' ? W[x.key].tile
+    : x.kind === 'rest' || x.kind === 'off' ? '휴식' : x.kind === 'deload' ? '가볍게' : '측정';
+
+  const cal = document.getElementById('cal');
+  function renderCal() {
+    cal.innerHTML = '';
+    ['월', '화', '수', '목', '금', '토', '일'].forEach((t) => { const e = document.createElement('div'); e.className = 'dow'; e.textContent = t; cal.appendChild(e); });
+    const lead = (days[0].d.getDay() + 6) % 7;
+    for (let i = 0; i < lead; i++) { const b = document.createElement('div'); b.className = 'blank'; cal.appendChild(b); }
+    days.forEach((x, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tile' + (x.kind === 'rest' || x.kind === 'off' ? ' rest' : '') + (x.kind === 'deload' || x.kind === 'test' ? ' special' : '')
+        + (i === sel ? ' sel' : '') + (keyOf(x.d) === todayKey ? ' today' : '') + (isDoneN(x.n) ? ' done' : '');
+      b.innerHTML = '<span class="d">D' + x.n + '</span><span class="t">' + titleOf(x) + (x.kind === 'work' ? '<span class="r">' + W[x.key].name + '</span>' : '') + '</span><span class="dt">' + fmt(x.d) + ' ' + DOW[x.d.getDay()] + '</span>';
+      b.setAttribute('aria-label', 'Day ' + x.n + ', ' + fmt(x.d) + ', ' + titleOf(x) + (isDoneN(x.n) ? ', 완료' : ''));
+      b.addEventListener('click', () => { sel = i; renderAll(); document.getElementById('card').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); });
+      cal.appendChild(b);
+    });
+    const workDays = days.filter((x) => x.kind !== 'rest' && x.kind !== 'off');
+    const c = workDays.filter((x) => isDoneN(x.n)).length;
+    document.getElementById('count').innerHTML = '완료 <b>' + c + '</b> / ' + workDays.length + ' 운동일';
+  }
+
+  function rows(list, wk, n) {
+    return list.map(([nm, s, reps, tip, main], ei) => {
+      const sets = s + (main ? WEEK[wk].extra : 0);
+      const cur = (store.days['day-' + n] && store.days['day-' + n].sets && store.days['day-' + n].sets[nm]) || [];
+      const pv = prevFor(nm, n);
+      let log = '<tr class="logrow"><td colspan="2"><div class="sets">';
+      log += '<span class="prev">' + (pv ? '지난 기록 ' + fmt(days[pv.m - 1].d) + ' · ' + pv.arr.filter((x) => x && (x.w != null || x.r != null)).map(fmtSet).join(', ') : '첫 기록이에요. 적당한 무게를 찾아 적어 보세요') + '</span><div class="setgrid">';
+      for (let i = 0; i < sets; i++) {
+        const c = cur[i] || {}, pp = pv && pv.arr[i] ? pv.arr[i] : {};
+        const base = 'in-' + n + '-' + ei + '-' + i;
+        log += '<label class="set"><span class="sn">' + (i + 1) + '</span>'
+          + '<input id="' + base + '-w" type="number" inputmode="decimal" step="0.5" min="0" data-ex="' + nm + '" data-i="' + i + '" data-k="w" value="' + (c.w != null ? c.w : '') + '" placeholder="' + (pp.w != null ? pp.w : '') + '" aria-label="' + nm + ' ' + (i + 1) + '세트 무게"><span class="u">kg</span>'
+          + '<input id="' + base + '-r" type="number" inputmode="numeric" step="1" min="0" data-ex="' + nm + '" data-i="' + i + '" data-k="r" value="' + (c.r != null ? c.r : '') + '" placeholder="' + (pp.r != null ? pp.r : '') + '" aria-label="' + nm + ' ' + (i + 1) + '세트 횟수"><span class="u">회</span></label>';
+      }
+      log += '</div></div></td></tr>';
+      const fig = window.FIGS && FIGS.has(nm) ? '<canvas class="fig" data-ex="' + nm + '" aria-hidden="true"></canvas>' : '';
+      const t2 = tip || (window.FIGS ? FIGS.cue(nm) : '');
+      return '<tr class="' + (main ? 'main' : '') + '"><td><div class="exc">' + fig + '<div><b>' + nm + '</b>' + (t2 ? '<span class="tip">' + t2 + '</span>' : '') + '</div></div></td><td class="n">' + sets + ' × ' + reps + '</td></tr>' + log;
+    }).join('');
+  }
+
+  function renderCard() {
+    const x = days[sel];
+    const card = document.getElementById('card');
+    let head, body = '';
+    const pills = [];
+    if (x.kind === 'work') {
+      const w = W[x.key];
+      pills.push('<span class="pill hot">' + WEEK[x.wk].label + '</span>', '<span class="pill">' + WEEK[x.wk].rir + '</span>');
+      if (x.key === 'CS' || x.key === 'LG' || x.key === 'AF') pills.push('<span class="pill">+ 존2 20분</span>');
+      head = w.name;
+      body = '<div class="tbl"><table><thead><tr><th>종목</th><th>세트 × 반복</th></tr></thead><tbody>' + rows(w.ex, x.wk, x.n) + '</tbody></table></div>';
+      if (x.n <= 7) body += '<div class="note"><b>첫 기록</b><span>각 종목에서 정한 반복 수를 2–3회 남기고 끝낼 수 있는 무게를 찾아 적어 두세요. 이 숫자가 30일 뒤 비교 기준이 됩니다.' + (x.n === 1 ? ' 오늘 운동 전에 체중, 팔뚝 둘레(힘 준 상태), 전완 둘레, 앞·옆·뒤 사진을 남겨 두세요.' : '') + '</span></div>';
+      if (x.n >= 26) body += '<div class="note"><b>포항 이동 중이라 헬스장이 없다면</b><span>푸시업 4세트 최대, 의자 딥스 3×12, 물 채운 백팩으로 컬 3×12, 맨몸 스쿼트 3×20. 30분이면 끝나요.</span></div>';
+    } else if (x.kind === 'off') {
+      head = '토요일 · 쉬는 날';
+      pills.push('<span class="pill">' + WEEK[x.wk].label + '</span>');
+      body = '<ul class="plain"><li>운동은 쉬어요. 시간이 나면 10분 스트레칭 정도만</li><li>단백질은 쉬는 날에도 평소처럼 챙기기</li></ul>';
+    } else if (x.kind === 'rest') {
+      head = '휴식 · 회복';
+      pills.push('<span class="pill">' + WEEK[x.wk].label + '</span>');
+      body = '<ul class="plain"><li>존2 걷기 40분 (숨은 차지만 대화는 가능한 속도)</li><li>스트레칭 10분: 견갑, 고관절, 햄스트링</li><li>이번 주 기록 훑어보고 다음 주 증량할 종목 표시</li><li>릴스용으로 같은 자리·같은 조명에서 몸 사진 한 장</li></ul>';
+    } else if (x.kind === 'deload') {
+      head = '가볍게 전신';
+      pills.push('<span class="pill">평소 무게의 50–60%</span>');
+      body = '<div class="tbl"><table><thead><tr><th>종목</th><th>세트 × 반복</th></tr></thead><tbody>'
+        + rows([['벤치프레스', 2, '8', '', 0], ['랫풀다운', 2, '10', '', 0], ['레그프레스', 2, '10', '', 0], ['EZ바 컬', 2, '10', '', 0]], 1, x.n)
+        + '</tbody></table></div><div class="note"><b>왜 가볍게?</b><span>내일 측정 전에 피로를 빼는 날이에요. 30분 안에 끝내고 걷기 20분.</span></div>';
+    } else {
+      head = '30일 측정';
+      pills.push('<span class="pill">D1과 비교</span>');
+      body = '<ul class="plain"><li>아침 공복 체중</li><li>팔뚝 둘레(힘 준 상태), 전완 둘레를 D1과 비교</li><li>D1과 같은 자리·조명에서 앞·옆·뒤 사진</li><li>덤벨 숄더프레스, EZ바 컬, 벤치프레스, 랫풀다운: 10회 가능한 무게를 첫 주 기록과 비교</li><li>다음 30일 계획은 이 결과를 보고 다시 짜기</li></ul>'
+        + '<div class="note"><b>릴스 소재</b><span>D1 사진과 D30 사진 비교, 무게 기록 변화는 그대로 "30일 결산" 영상이 됩니다.</span></div>';
+    }
+    const isDone = isDoneN(x.n);
+    const btn = (x.kind === 'rest' || x.kind === 'off') ? '' : '<button type="button" class="btn' + (isDone ? ' on' : '') + '" id="doneBtn">' + (isDone ? '✓ 완료함' : '완료로 표시') + '</button>';
+    card.innerHTML = '<div class="card-top"><div><span class="eyebrow">Day ' + x.n + ' · ' + fmt(x.d) + ' (' + DOW[x.d.getDay()] + ')</span><h2>' + head + '</h2><div class="pills">' + pills.join('') + '</div></div>'
+      + '<div class="navs"><button type="button" class="ghost" id="prev"' + (sel === 0 ? ' disabled' : '') + '>‹ 이전</button><button type="button" class="ghost" id="next"' + (sel === 29 ? ' disabled' : '') + '>다음 ›</button>' + btn + '</div></div>' + body;
+    document.getElementById('prev').onclick = () => { if (sel > 0) { sel--; renderAll(); } };
+    document.getElementById('next').onclick = () => { if (sel < 29) { sel++; renderAll(); } };
+    const db = document.getElementById('doneBtn');
+    if (db) db.onclick = () => { const d = docFor(x.n); d.done = !d.done; persist(x.n); renderAll(); };
+    card.querySelectorAll('input[data-ex]').forEach((inp) => {
+      inp.addEventListener('input', () => {
+        const d = docFor(x.n), nm = inp.dataset.ex, i = +inp.dataset.i;
+        const arr = d.sets[nm] || (d.sets[nm] = []);
+        while (arr.length <= i) arr.push({ w: null, r: null });
+        const v = inp.value.trim() === '' ? null : Number(inp.value);
+        arr[i] = Object.assign({}, arr[i], { [inp.dataset.k]: (v == null || isNaN(v)) ? null : v });
+        persist(x.n);
+      });
+      inp.addEventListener('change', renderHistory);
+    });
+  }
+
+  function renderHistory() {
+    const el = document.getElementById('hist'); if (!el) return;
+    const by = {};
+    Object.keys(store.days).map((k) => store.days[k]).filter((d) => d && d.n && d.sets).sort((a, b) => a.n - b.n).forEach((d) => {
+      Object.keys(d.sets).forEach((nm) => {
+        const good = (d.sets[nm] || []).filter((x) => x && x.w != null && x.r != null);
+        if (!good.length) return;
+        const top = good.reduce((a, b) => (b.w > a.w || (b.w === a.w && b.r > a.r)) ? b : a);
+        (by[nm] || (by[nm] = [])).push({ n: d.n, top, vol: good.reduce((s2, x) => s2 + x.w * x.r, 0) });
+      });
+    });
+    const names = Object.keys(by);
+    if (!names.length) { el.innerHTML = '<p class="lede">아직 기록이 없어요. 오늘 카드의 세트 칸에 무게와 횟수를 적으면 종목별로 여기에 모여요.</p>'; return; }
+    el.innerHTML = '<div class="tbl"><table class="histt"><thead><tr><th>종목</th><th>날짜별 최고 세트</th></tr></thead><tbody>' + names.map((nm) => {
+      const list = by[nm]; const first = list[0].top, last = list[list.length - 1].top;
+      const diff = list.length > 1 ? (last.w - first.w) : 0;
+      return '<tr><td><b>' + nm + '</b>' + (list.length > 1 ? '<span class="tip">첫 기록 대비 ' + (diff >= 0 ? '+' : '') + diff + 'kg</span>' : '') + '</td><td class="chips">' + list.slice(-6).map((e) => '<span class="chipv">' + fmt(days[e.n - 1].d) + ' <b>' + fmtSet(e.top) + '</b></span>').join('') + '</td></tr>';
+    }).join('') + '</tbody></table></div>';
+  }
+  function renderAll() { renderCal(); renderCard(); renderHistory(); }
+  const fileState = (t) => { document.getElementById('fileState').textContent = t; };
+  document.getElementById('exportBtn').addEventListener('click', async () => {
+    const stamp = isoOf(new Date());
+    const json = JSON.stringify({ app: 'plan30', version: 1, exportedAt: new Date().toISOString(), days: store.days }, null, 2);
+    const file = new File([json], 'workout-log-' + stamp + '.json', { type: 'application/json' });
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: '운동 기록' }); fileState('내보냈어요: ' + file.name); return; }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    fileState('다운로드했어요: ' + file.name);
+  });
+  document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+  document.getElementById('importFile').addEventListener('change', async (ev) => {
+    const f = ev.target.files && ev.target.files[0]; ev.target.value = '';
+    if (!f) return;
+    try {
+      const data = JSON.parse(await f.text());
+      if (!data || data.app !== 'plan30' || typeof data.days !== 'object') { fileState('이 앱에서 내보낸 기록 파일이 아니에요.'); return; }
+      const cnt = Object.keys(data.days).length;
+      if (!confirm('지금 폰에 있는 기록을 이 파일(' + cnt + '일치)로 바꿀까요?')) return;
+      store.days = data.days; saveLocal(); renderAll();
+      fileState('불러왔어요: ' + f.name + ' (' + cnt + '일치)');
+    } catch (e) { fileState('파일을 읽지 못했어요. JSON 형식이 맞는지 확인해 주세요.'); }
+  });
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+  renderAll();
+  const gal = document.getElementById('gal');
+  const seen = {};
+  ['CS', 'BB', 'LG', 'SA', 'AF'].forEach((k) => {
+    gal.insertAdjacentHTML('beforeend', '<h3>' + W[k].focus + ' · ' + W[k].name + '</h3>');
+    W[k].ex.forEach(([nm]) => {
+      if (!FIGS.has(nm) || seen[nm]) return; seen[nm] = 1;
+      gal.insertAdjacentHTML('beforeend', '<figure><canvas data-ex="' + nm + '" aria-hidden="true"></canvas><figcaption><b>' + nm + '</b><span>' + FIGS.cue(nm) + '</span></figcaption></figure>');
+    });
+  });
+  FIGS.start();
+  initStore();
+})();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+</script>
+</body>
+</html>
